@@ -3,40 +3,6 @@
 #include "pipeevent-int.h"
 #include <assert.h>
 
-static void pipeevent_on_readable(evutil_socket_t fd, short what, void *arg)
-{
-    (void)what;
-    struct pipeevent *pev = (struct pipeevent *)arg;
-
-    ssize_t n = infinitypipe_splice_in(&pev->in, (int)fd, INFINITYPIPE_MAX_SPLICE_AT_ONCE);
-    if (n > 0)
-    {
-        /* infinitypipe already scheduled deferred via notify */
-        return;
-    }
-    
-    if (n == 0)
-    {
-        if (pev->eventcb)
-            pev->eventcb(pev, PEV_EVENT_EOF, pev->cb_ctx);
-        return;
-    }
-
-    if (errno == EAGAIN || errno == EWOULDBLOCK)
-        return;
-
-    if (pev->eventcb)
-        pev->eventcb(pev, PEV_EVENT_ERROR, pev->cb_ctx);
-}
-
-static void pipeevent_on_writable(evutil_socket_t fd, short what, void *arg)
-{
-    (void)fd;
-    (void)what;
-    struct pipeevent *pev = (struct pipeevent *)arg;
-    pipev_flush_output(pev);
-}
-
 /* public API */
 
 struct pipeevent *pipeevent_socket_new(struct event_base *base, int fd, int options)
@@ -71,17 +37,11 @@ struct pipeevent *pipeevent_socket_new(struct event_base *base, int fd, int opti
     infinitypipe_setcb(&pev->in, pipev_ip_notify, pev);
     infinitypipe_setcb(&pev->out, pipev_ip_notify, pev);
 
-    pev->ev_read = event_new(base, fd, 
-        EV_READ|EV_PERSIST, pipeevent_on_readable, pev);
-    pev->ev_write = event_new(base, fd, 
-        EV_WRITE|EV_PERSIST, pipeevent_on_writable, pev);
+    event_assign(&pev->ev_read, base, fd, 
+        EV_READ|EV_PERSIST, pipev_on_readable, pev);
+    event_assign(&pev->ev_write, base, fd, 
+        EV_WRITE|EV_PERSIST, pipev_on_writable, pev);
     evtimer_assign(&pev->ev_deferred, base, pipev_on_deferred, pev);
-
-    if (!pev->ev_read || !pev->ev_write)
-    {
-        pipeevent_free(pev);
-        return NULL;
-    }
 
     return pev;
 #endif
@@ -92,17 +52,8 @@ void pipeevent_free(struct pipeevent *pev)
     if (!pev)
         return;
 
-    if (pev->ev_read)
-    {
-        event_del(pev->ev_read);
-        event_free(pev->ev_read);
-    }
-    if (pev->ev_write)
-    {
-        event_del(pev->ev_write);
-        event_free(pev->ev_write);
-    }
-
+    event_del(&pev->ev_read);
+    event_del(&pev->ev_write);
     evtimer_del(&pev->ev_deferred);
 
     infinitypipe_free(&pev->in);
@@ -120,7 +71,7 @@ int pipeevent_enable(struct pipeevent *pev, short events)
 
     if ((events & EV_READ) && !(pev->enabled & EV_READ))
     {
-        if (event_add(pev->ev_read, NULL) != 0)
+        if (event_add(&pev->ev_read, NULL) != 0)
             return -1;
         pev->enabled |= EV_READ;
     }
@@ -142,7 +93,7 @@ int pipeevent_disable(struct pipeevent *pev, short events)
 
     if ((events & EV_READ) && (pev->enabled & EV_READ))
     {
-        event_del(pev->ev_read);
+        event_del(&pev->ev_read);
         pev->enabled &= ~EV_READ;
     }
 
@@ -150,7 +101,7 @@ int pipeevent_disable(struct pipeevent *pev, short events)
     {
         if (pev->ev_write_added)
         {
-            event_del(pev->ev_write);
+            event_del(&pev->ev_write);
             pev->ev_write_added = 0;
         }
         pev->enabled &= ~EV_WRITE;

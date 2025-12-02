@@ -9,8 +9,8 @@
 
 #include "pipeevent-st.h"
 
-#define PEV_PENDING_READ  0x01u
-#define PEV_PENDING_WRITE 0x02u
+#define PEV_PENDING_READ  EV_READ
+#define PEV_PENDING_WRITE EV_WRITE
 
 void pipev_ip_notify(void *arg);
 
@@ -19,3 +19,7 @@ void pipev_on_deferred(evutil_socket_t fd, short what, void *arg);
 void pipev_flush_output(struct pipeevent *pev);
 
 void pipev_run_pending(struct pipeevent *pev);
+
+void pipev_on_readable(evutil_socket_t fd, short what, void *arg);
+
+void pipev_on_writable(evutil_socket_t fd, short what, void *arg);

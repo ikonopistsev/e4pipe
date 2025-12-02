@@ -46,6 +46,7 @@ int infinitypipe_init(struct infinitypipe *ip, size_t seg_capacity, int flags)
     memset(ip, 0, sizeof(*ip));
     ip->seg_capacity = seg_capacity ? seg_capacity : INFINITYSEG_DEFAULT_CAPACITY;
     ip->flags = flags;
+    ip->max_size = INFINITYPIPE_MAX_SIZE;
     return 0;
 }
 
@@ -77,6 +78,16 @@ ssize_t infinitypipe_splice_in(struct infinitypipe *ip, int in_fd, size_t max_by
 
     while (total < max_bytes)
     {
+        // ЛИМИТ ОБЩЕЙ ДЛИНЫ
+        if (ip->total_len >= ip->max_size) {
+            errno = EAGAIN;  // буфер заполнен
+            
+            if (total)
+                break;       // уже что-то прочитали в этом вызове
+
+            return -1;       // сразу сигнализируем наверх
+        }        
+
         struct infinityseg *s = ip->tail;
         int newly_allocated = 0;
 

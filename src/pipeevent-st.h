@@ -10,8 +10,8 @@ struct pipeevent {
 
     short enabled;
 
-    struct event *ev_read;
-    struct event *ev_write;
+    struct event ev_read;
+    struct event ev_write;
     int ev_write_added;
 
     /* deferred dispatcher */

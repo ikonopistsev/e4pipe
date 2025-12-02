@@ -50,3 +50,15 @@ static inline void ip_seg_add(struct infinitypipe *ip, struct infinityseg *s)
         ip->tail = s;
     }
 }
+
+static inline void ip_seg_free_head(struct infinitypipe *ip)
+{
+    struct infinityseg *s = ip->head;
+    if (!s) return;
+
+    ip->head = s->next;
+    if (!ip->head)
+        ip->tail = NULL;
+    
+    infinityseg_free(s);
+}

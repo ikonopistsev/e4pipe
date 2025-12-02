@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#include <errno.h>
 
 #ifdef __linux__
 #ifndef SPLICE_F_MOVE
@@ -54,7 +55,10 @@ struct infinityseg *infinityseg_new(size_t cap_hint, int flags)
 
     if (x_pipe2(s->p, flags) != 0)
     {
+        int e = errno;
         free(s);
+        // сохраним код ошибки
+        errno = e;    
         return NULL;
     }
 

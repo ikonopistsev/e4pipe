@@ -75,6 +75,7 @@ ev_ssize_t infinitypipe_write(struct infinitypipe *ip,
                 ip->head = s->next;
                 if (!ip->head)
                     ip->tail = NULL;
+                
                 infinityseg_free(s);
             }
             continue;

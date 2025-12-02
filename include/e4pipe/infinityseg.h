@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 #ifndef INFINITYSEG_DEFAULT_CAPACITY
-#define INFINITYSEG_DEFAULT_CAPACITY (64u * 1024u)
+#define INFINITYSEG_DEFAULT_CAPACITY (256u * 1024u)
 #endif
 
 #ifdef __cplusplus

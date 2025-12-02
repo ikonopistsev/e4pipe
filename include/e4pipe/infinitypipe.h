@@ -14,6 +14,11 @@ extern "C" {
 #define INFINITYPIPE_MAX_SPLICE_AT_ONCE	(1<<30)
 #endif
 
+// 64 MiB
+#ifndef INFINITYPIPE_MAX_SIZE
+#define INFINITYPIPE_MAX_SIZE (64 * 1024u * 1024u)
+#endif
+
 // структура изменения буфера
 struct infinitypipe_info
 {
@@ -35,7 +40,9 @@ struct infinitypipe
     size_t seg_capacity;
     size_t total_len;
     int flags;
-    /* callback */
+    // maximum allowed size of the pipe
+    size_t max_size;
+    // callback
     infinitypipe_notify_fn fn;
     void *fn_arg;
     int notify_pending;
@@ -64,6 +71,11 @@ void infinitypipe_free(struct infinitypipe *ip);
 // callbacks setup
 void infinitypipe_setcb(struct infinitypipe *ip, infinitypipe_notify_fn fn, void *fn_arg);
 int infinitypipe_get_stat(struct infinitypipe *ip, struct infinitypipe_info *stat);
+
+static inline void infinitypipe_set_max_size(struct infinitypipe *ip, size_t max_size)
+{
+    ip->max_size = max_size;
+}
 
 // splice/move ops
 ssize_t infinitypipe_splice_in(struct infinitypipe *ip, int in_fd, size_t max_bytes);
