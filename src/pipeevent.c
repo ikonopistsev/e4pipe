@@ -130,7 +130,7 @@ int pipeevent_enable(struct pipeevent *pev, short events)
     {
         pev->enabled |= EV_WRITE;
         /* start flushing if already has data */
-        if (infinitypipe_len(&pev->out) > 0)
+        if (infinitypipe_get_length(&pev->out) > 0)
             pipeevent_ip_notify_(pev);
     }
 

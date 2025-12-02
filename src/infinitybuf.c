@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <assert.h>
 
-ssize_t infinitypipe_write(struct infinitypipe *ip,
+ev_ssize_t infinitypipe_write(struct infinitypipe *ip,
     struct evbuffer *out, size_t max_bytes)
 {
 #ifndef __linux__
@@ -17,7 +17,9 @@ ssize_t infinitypipe_write(struct infinitypipe *ip,
     errno = ENOSYS;
     return -1;
 #else
-    if (!ip || !out)
+    assert(ip);
+
+    if (!out)
     {
         errno = EINVAL;
         return -1;
@@ -111,7 +113,7 @@ ssize_t infinitypipe_write(struct infinitypipe *ip,
 #endif
 }
 
-ssize_t infinitypipe_read(struct infinitypipe *ip,
+ev_ssize_t infinitypipe_read(struct infinitypipe *ip,
     struct evbuffer *in, size_t max_bytes)
 {
 #ifndef __linux__
@@ -121,7 +123,9 @@ ssize_t infinitypipe_read(struct infinitypipe *ip,
     errno = ENOSYS;
     return -1;
 #else
-    if (!ip || !in)
+    assert(ip);
+
+    if (!in)
     {
         errno = EINVAL;
         return -1;

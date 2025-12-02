@@ -45,7 +45,7 @@ struct infinitypipe_mark
     struct infinityseg *last_before;
 };
 
-static inline size_t infinitypipe_len(const struct infinitypipe *ip)
+static inline size_t infinitypipe_get_length(const struct infinitypipe *ip)
 {
     return ip->total_len;
 }

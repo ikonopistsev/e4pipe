@@ -4,9 +4,10 @@
 extern "C" {
 #endif
 
+#include "e4pipe/infinitypipe.h"
+
 #include <event2/event.h>
 #include <event2/bufferevent.h>
-#include "e4pipe/infinitypipe.h"
 
 struct pipeevent;
 
@@ -25,29 +26,29 @@ enum pipeevent_options
     PEV_OPT_CLOSE_ON_FREE = BEV_OPT_CLOSE_ON_FREE
 };
 
-/* Создать pipeevent над уже открытым fd (nonblocking будет выставлен внутри) */
-struct pipeevent *pipeevent_socket_new(struct event_base *base,
-                                       int fd,
-                                       int options);
+// Создать pipeevent над уже открытым fd (nonblocking будет выставлен внутри)
+struct pipeevent* pipeevent_socket_new(struct event_base *base,
+    int fd, int options);
 
-/* Освободить, при OPT_CLOSE_ON_FREE — закрыть fd */
+// Освободить, при OPT_CLOSE_ON_FREE — закрыть fd
 void pipeevent_free(struct pipeevent *pev);
 
-/* EV_READ / EV_WRITE — разрешить чтение/запись (как bufferevent_enable) */
+// EV_READ / EV_WRITE — разрешить чтение/запись (как bufferevent_enable)
 int pipeevent_enable(struct pipeevent *pev, short events);
 int pipeevent_disable(struct pipeevent *pev, short events);
 
-/* Установить callbacks */
+// Установить callbacks
 void pipeevent_setcb(struct pipeevent *pev,
     pipeevent_data_cb readcb, pipeevent_data_cb writecb,
     pipeevent_event_cb eventcb, void *cb_ctx);
 
-/* Доступ к fd */
+// Доступ к fd
 int pipeevent_get_fd(struct pipeevent *pev);
 
+// Доступ к event_base
 struct event_base *pipeevent_get_base(struct pipeevent *pev);
 
-/* Доступ к input/output буферам (как bufferevent_get_input/output) */
+// Доступ к input/output буферам (как bufferevent_get_input/output)
 struct infinitypipe *pipeevent_get_input(struct pipeevent *pev);
 struct infinitypipe *pipeevent_get_output(struct pipeevent *pev);
 

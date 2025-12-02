@@ -13,7 +13,7 @@ static void arm_write_event(struct pipeevent *pev)
 
 static void disarm_write_event_if_empty(struct pipeevent *pev)
 {
-    if (pev->ev_write_added && infinitypipe_len(&pev->out) == 0) {
+    if (pev->ev_write_added && infinitypipe_get_length(&pev->out) == 0) {
         event_del(pev->ev_write);
         pev->ev_write_added = 0;
     }
@@ -34,7 +34,7 @@ void pipeevent_flush_output_(struct pipeevent *pev)
     if (!(pev->enabled & EV_WRITE)) return;
 
     for (;;) {
-        if (infinitypipe_len(&pev->out) == 0) {
+        if (infinitypipe_get_length(&pev->out) == 0) {
             disarm_write_event_if_empty(pev);
             return;
         }
@@ -70,7 +70,7 @@ void pipeevent_run_pending_(struct pipeevent *pev)
 
         if (p & PEV_PENDING_WRITE) {
             pipeevent_flush_output_(pev);
-            if (pev->writecb && infinitypipe_len(&pev->out) == 0)
+            if (pev->writecb && infinitypipe_get_length(&pev->out) == 0)
                 pev->writecb(pev, pev->cb_ctx);
         }
     }
