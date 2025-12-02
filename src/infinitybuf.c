@@ -67,7 +67,7 @@ ev_ssize_t infinitypipe_write(struct infinitypipe *ip,
             evbuffer_commit_space(out, vec, 1);
 
             s->len -= (size_t)r;
-            ip->total_len -= (size_t)r;
+            ip_dec_total_len(ip, (size_t)r);
             total += (size_t)r;
 
             if (s->len == 0)
@@ -174,7 +174,7 @@ ev_ssize_t infinitypipe_read(struct infinitypipe *ip,
                 ip_seg_add(ip, s);
 
             s->len += (size_t)rc;
-            ip->total_len += (size_t)rc;
+            ip_inc_total_len(ip, (size_t)rc);
             total += (size_t)rc;
             continue;
         }

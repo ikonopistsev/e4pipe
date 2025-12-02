@@ -16,28 +16,14 @@ void infinitypipe_setcb(struct infinitypipe *ip, infinitypipe_notify_fn fn, void
     ip->fn_arg = fn_arg;
 }
 
-static inline void stat_begin_if_needed_(struct infinitypipe *ip, size_t old_len)
-{
-    assert(ip);
-
-    if (ip->stat.n_added == 0 && ip->stat.n_deleted == 0)
-    {
-        ip->stat.orig_size = old_len; // размер ДО первого изменения батча
-    }
-}
-
 int infinitypipe_get_stat(struct infinitypipe *ip, struct infinitypipe_info *stat)
 {
     assert(ip);
+    assert(stat);
 
-    if (!stat)
+    if (ip->stat.n_added == 0 && ip->stat.n_deleted == 0)
     {
-        errno = EINVAL;
-        return -1;
-    }
-
-    if (stat->n_added == 0 && stat->n_deleted == 0)
-    {
+        ip->notify_pending = 0;
         return 0;
     }
 
@@ -46,6 +32,7 @@ int infinitypipe_get_stat(struct infinitypipe *ip, struct infinitypipe_info *sta
     ip->stat.orig_size = ip->total_len;
     ip->stat.n_added = 0;
     ip->stat.n_deleted = 0;
+    ip->notify_pending = 0;
 
     return 1;
 }
@@ -127,8 +114,9 @@ ssize_t infinitypipe_splice_in(struct infinitypipe *ip, int in_fd, size_t max_by
                 /* только теперь сегмент становится "активным" */
                 ip_seg_add(ip, s);
             }
+
             s->len += (size_t)rc;
-            ip->total_len += (size_t)rc;
+            ip_inc_total_len(ip, (size_t)rc);
             total += (size_t)rc;
 
             continue;
@@ -193,7 +181,7 @@ ssize_t infinitypipe_splice_out(struct infinitypipe *ip, int out_fd, size_t max_
         if (rc > 0)
         {
             s->len -= (size_t)rc;
-            ip->total_len -= (size_t)rc;
+            ip_dec_total_len(ip, (size_t)rc);
             total += (size_t)rc;
 
             if (s->len == 0)
@@ -277,12 +265,14 @@ ssize_t infinitypipe_move(struct infinitypipe *dst, struct infinitypipe *src, si
     {
         size_t moved = src->total_len;
 
+        // ip_stat_begin(dst, dst->total_len);
         dst->head = src->head;
         dst->tail = src->tail;
-        dst->total_len = moved;
+        ip_inc_total_len(dst, moved);
 
+        // ip_stat_begin(src, src->total_len);
         src->head = src->tail = NULL;
-        src->total_len = 0;
+        ip_dec_total_len(src, moved);
 
         /* уведомим про изменения */
         ip_note_change(dst, moved, 0);
@@ -314,8 +304,8 @@ ssize_t infinitypipe_move(struct infinitypipe *dst, struct infinitypipe *src, si
             dst->tail = ss;
         }
 
-        src->total_len -= ss->len;
-        dst->total_len += ss->len;
+        ip_dec_total_len(src, ss->len);
+        ip_inc_total_len(dst, ss->len);
         total += ss->len;
     }
 
@@ -346,10 +336,10 @@ ssize_t infinitypipe_move(struct infinitypipe *dst, struct infinitypipe *src, si
         if (rc > 0)
         {
             ss->len -= (size_t)rc;
-            src->total_len -= (size_t)rc;
+            ip_dec_total_len(src, (size_t)rc);
 
             ds->len += (size_t)rc;
-            dst->total_len += (size_t)rc;
+            ip_inc_total_len(dst, (size_t)rc);
 
             total += (size_t)rc;
 
@@ -392,6 +382,14 @@ ssize_t infinitypipe_tee_since(struct infinitypipe *ip,
     errno = ENOSYS;
     return -1;
 #else
+    assert(ip);
+
+    if (!m)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
     struct infinityseg *s = (!m || !m->last_before) ? ip->head : m->last_before->next;
     size_t total = 0;
 

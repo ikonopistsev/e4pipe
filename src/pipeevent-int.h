@@ -12,10 +12,10 @@
 #define PEV_PENDING_READ  0x01u
 #define PEV_PENDING_WRITE 0x02u
 
-void pipeevent_ip_notify_(void *arg);
+void pipev_ip_notify(void *arg);
 
-void pipeevent_on_deferred_(evutil_socket_t fd, short what, void *arg);
+void pipev_on_deferred(evutil_socket_t fd, short what, void *arg);
 
-void pipeevent_flush_output_(struct pipeevent *pev);
+void pipev_flush_output(struct pipeevent *pev);
 
-void pipeevent_run_pending_(struct pipeevent *pev);
+void pipev_run_pending(struct pipeevent *pev);

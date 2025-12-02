@@ -2,6 +2,26 @@
 
 #include "e4pipe/infinitypipe.h"
 
+static inline void ip_inc_total_len(struct infinitypipe *ip, size_t val)
+{
+    if (ip->stat.n_added == 0 && ip->stat.n_deleted == 0)
+    {
+        ip->stat.orig_size = ip->total_len;
+    }
+
+    ip->total_len += val;
+}
+
+static inline void ip_dec_total_len(struct infinitypipe *ip, size_t val)
+{
+    if (ip->stat.n_added == 0 && ip->stat.n_deleted == 0)
+    {
+        ip->stat.orig_size = ip->total_len;
+    }
+
+    ip->total_len -= val;
+}
+
 static inline void ip_note_change(struct infinitypipe *ip, size_t added, size_t deleted)
 {
     if (added == 0 && deleted == 0)
@@ -13,6 +33,7 @@ static inline void ip_note_change(struct infinitypipe *ip, size_t added, size_t 
     /* lightweight notify to parent: schedule deferred tick */
     if (ip->fn) 
     {
+        ip->notify_pending = 1;
         ip->fn(ip->fn_arg);
     }
 }

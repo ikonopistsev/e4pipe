@@ -34,8 +34,7 @@ static void pipeevent_on_writable(evutil_socket_t fd, short what, void *arg)
     (void)fd;
     (void)what;
     struct pipeevent *pev = (struct pipeevent *)arg;
-
-    pipeevent_flush_output_(pev);
+    pipev_flush_output(pev);
 }
 
 /* public API */
@@ -69,14 +68,14 @@ struct pipeevent *pipeevent_socket_new(struct event_base *base, int fd, int opti
         IP_NONBLOCK|IP_CLOEXEC);
 
     /* pipeevent is the "parent" */
-    infinitypipe_setcb(&pev->in, pipeevent_ip_notify_, pev);
-    infinitypipe_setcb(&pev->out, pipeevent_ip_notify_, pev);
+    infinitypipe_setcb(&pev->in, pipev_ip_notify, pev);
+    infinitypipe_setcb(&pev->out, pipev_ip_notify, pev);
 
     pev->ev_read = event_new(base, fd, 
         EV_READ|EV_PERSIST, pipeevent_on_readable, pev);
     pev->ev_write = event_new(base, fd, 
         EV_WRITE|EV_PERSIST, pipeevent_on_writable, pev);
-    evtimer_assign(&pev->ev_deferred, base, pipeevent_on_deferred_, pev);
+    evtimer_assign(&pev->ev_deferred, base, pipev_on_deferred, pev);
 
     if (!pev->ev_read || !pev->ev_write)
     {
@@ -131,7 +130,7 @@ int pipeevent_enable(struct pipeevent *pev, short events)
         pev->enabled |= EV_WRITE;
         /* start flushing if already has data */
         if (infinitypipe_get_length(&pev->out) > 0)
-            pipeevent_ip_notify_(pev);
+            pipev_ip_notify(pev);
     }
 
     return 0;

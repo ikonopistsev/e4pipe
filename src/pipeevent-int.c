@@ -2,7 +2,7 @@
 
 #include "pipeevent-int.h"
 
-static void arm_write_event(struct pipeevent *pev)
+static inline void pipev_arm_write_event(struct pipeevent *pev)
 {
     if (!(pev->enabled & EV_WRITE)) return;
     if (!pev->ev_write_added) {
@@ -11,7 +11,7 @@ static void arm_write_event(struct pipeevent *pev)
     }
 }
 
-static void disarm_write_event_if_empty(struct pipeevent *pev)
+static inline void pipev_disarm_write_event(struct pipeevent *pev)
 {
     if (pev->ev_write_added && infinitypipe_get_length(&pev->out) == 0) {
         event_del(pev->ev_write);
@@ -19,7 +19,7 @@ static void disarm_write_event_if_empty(struct pipeevent *pev)
     }
 }
 
-void pipeevent_ip_notify_(void *arg)
+void pipev_ip_notify(void *arg)
 {
     struct pipeevent *pev = (struct pipeevent*)arg;
     if (!pev->deferred_scheduled) {
@@ -29,24 +29,24 @@ void pipeevent_ip_notify_(void *arg)
     }
 }
 
-void pipeevent_flush_output_(struct pipeevent *pev)
+void pipev_flush_output(struct pipeevent *pev)
 {
     if (!(pev->enabled & EV_WRITE)) return;
 
     for (;;) {
         if (infinitypipe_get_length(&pev->out) == 0) {
-            disarm_write_event_if_empty(pev);
+            pipev_disarm_write_event(pev);
             return;
         }
 
-        ssize_t rc = infinitypipe_splice_out(&pev->out, pev->fd, 8u * 1024u * 1024u);
+        ssize_t rc = infinitypipe_splice_out(&pev->out, pev->fd, INFINITYPIPE_MAX_SPLICE_AT_ONCE);
         if (rc > 0) {
             /* out changed; infinitypipe already scheduled deferred tick */
             continue;
         }
 
         if (rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            arm_write_event(pev);
+            pipev_arm_write_event(pev);
             return;
         }
 
@@ -56,7 +56,7 @@ void pipeevent_flush_output_(struct pipeevent *pev)
     }
 }
 
-void pipeevent_run_pending_(struct pipeevent *pev)
+void pipev_run_pending(struct pipeevent *pev)
 {
     if (pev->cb_running) return;
     pev->cb_running = 1;
@@ -69,7 +69,7 @@ void pipeevent_run_pending_(struct pipeevent *pev)
             pev->readcb(pev, pev->cb_ctx);
 
         if (p & PEV_PENDING_WRITE) {
-            pipeevent_flush_output_(pev);
+            pipev_flush_output(pev);
             if (pev->writecb && infinitypipe_get_length(&pev->out) == 0)
                 pev->writecb(pev, pev->cb_ctx);
         }
@@ -78,22 +78,21 @@ void pipeevent_run_pending_(struct pipeevent *pev)
     pev->cb_running = 0;
 }
 
-void pipeevent_on_deferred_(evutil_socket_t fd, short what, void *arg)
+void pipev_on_deferred(evutil_socket_t fd, short what, void *arg)
 {
     (void)fd; (void)what;
     struct pipeevent *pev = (struct pipeevent*)arg;
     pev->deferred_scheduled = 0;
 
     /* pull buffered deltas into pipeevent pending flags */
-    struct infinitypipe_info stat_in;
-    infinitypipe_get_stat(&pev->in, &stat_in);
-    if (stat_in.n_added || stat_in.n_deleted)
+    struct infinitypipe_info st;
+    if (infinitypipe_get_stat(&pev->in, &st)) {
         pev->pending_flags |= PEV_PENDING_READ;
+    }
 
-    struct infinitypipe_info stat_out;
-    infinitypipe_get_stat(&pev->out, &stat_out);
-    if (stat_out.n_added || stat_out.n_deleted)
+    if (infinitypipe_get_stat(&pev->out, &st)) {
         pev->pending_flags |= PEV_PENDING_WRITE;
+    }
 
-    pipeevent_run_pending_(pev);
+    pipev_run_pending(pev);
 }

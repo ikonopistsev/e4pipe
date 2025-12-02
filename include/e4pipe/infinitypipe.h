@@ -38,6 +38,7 @@ struct infinitypipe
     /* callback */
     infinitypipe_notify_fn fn;
     void *fn_arg;
+    int notify_pending;
 };
 
 struct infinitypipe_mark
