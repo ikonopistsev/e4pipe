@@ -420,7 +420,6 @@ ssize_t infinitypipe_tee_pipe(struct infinitypipe *ip,
         (!m || !m->last_before) ? ip->head : m->last_before->next;
 
     size_t total = 0;
-
     for (; s && total < max_bytes; s = s->next)
     {
         size_t left = s->len;

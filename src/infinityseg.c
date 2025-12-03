@@ -58,14 +58,13 @@ struct infinityseg *infinityseg_new(size_t cap_hint, int flags)
         int e = errno;
         free(s);
         // сохраним код ошибки
-        errno = e;    
+        errno = e;
         return NULL;
     }
 
 #ifdef __linux__
-    s->cap = try_set_pipe_sz(s->p[0], 
-        cap_hint ? 
-            cap_hint : INFINITYSEG_DEFAULT_CAPACITY);
+    s->cap = try_set_pipe_sz(s->p[0],
+                             cap_hint ? cap_hint : INFINITYSEG_DEFAULT_CAPACITY);
 #else
     (void)cap_hint;
     s->cap = INFINITYSEG_DEFAULT_CAPACITY;
@@ -75,7 +74,7 @@ struct infinityseg *infinityseg_new(size_t cap_hint, int flags)
     return s;
 }
 
-void infinityseg_free(struct infinityseg* s)
+void infinityseg_free(struct infinityseg *s)
 {
     assert(s);
     close(s->p[0]);
@@ -86,27 +85,40 @@ void infinityseg_free(struct infinityseg* s)
 ssize_t infinityseg_read(struct infinityseg *s, void *buf, size_t size)
 {
     assert(s);
-    assert(buf || size == 0);
+
+    if (!buf)
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
     if (size == 0 || s->len == 0)
         return 0;
 
     // Не читаем больше, чем есть в пайпе
     size_t want = (size < s->len) ? size : s->len;
-    
-    ssize_t rc = read(s->p[0], buf, want);
-    if (rc > 0)
+    ssize_t rc;
+    do
     {
+        rc = read(s->p[0], buf, want);
+    // повторяем при прерывании сигналом
+    } while (rc < 0 && errno == EINTR); 
+
+    if (rc > 0)
         s->len -= (size_t)rc;
-    }
-    
+
     return rc;
 }
 
 ssize_t infinityseg_write(struct infinityseg *s, const void *buf, size_t size)
 {
     assert(s);
-    assert(buf || size == 0);
+
+    if (!buf)
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
     if (size == 0)
         return 0;
@@ -121,12 +133,17 @@ ssize_t infinityseg_write(struct infinityseg *s, const void *buf, size_t size)
 
     // Не пишем больше, чем есть места
     size_t want = (size < room) ? size : room;
-    
-    ssize_t rc = write(s->p[1], buf, want);
+    ssize_t rc;
+    do
+    {
+        rc = write(s->p[1], buf, want);
+    // повторяем при прерывании сигналом
+    } while (rc < 0 && errno == EINTR);
+
     if (rc > 0)
     {
         s->len += (size_t)rc;
     }
-    
+
     return rc;
 }
