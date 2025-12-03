@@ -1,6 +1,6 @@
 #pragma once
 
-#include "e4pipe/infinitypipe.h"
+#include "e4pipe/infinitypipe_struct.h"
 
 static inline void ip_inc_total_len(struct infinitypipe *ip, size_t val)
 {

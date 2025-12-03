@@ -168,11 +168,9 @@ ev_ssize_t infinitypipe_read(struct infinitypipe *ip,
         }
 
         int rc = evbuffer_write_atmost(in, s->p[1], (ev_ssize_t)want);
-
         if (rc > 0)
         {
-            if (newly_allocated)
-                ip_seg_add(ip, s);
+            ip_seg_add(ip, s);
 
             s->len += (size_t)rc;
             ip_inc_total_len(ip, (size_t)rc);

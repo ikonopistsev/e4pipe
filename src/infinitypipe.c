@@ -8,6 +8,21 @@
 #include <errno.h>
 #include <assert.h>
 
+size_t infinitypipe_get_length(const struct infinitypipe *ip)
+{
+    return ip->total_len;
+}
+
+void infinitypipe_mark(struct infinitypipe *ip, struct infinitypipe_mark *m)
+{
+    m->last_before = ip->tail;
+}
+
+void infinitypipe_set_max_size(struct infinitypipe *ip, size_t max_size)
+{
+    ip->max_size = max_size;
+}
+
 void infinitypipe_setcb(struct infinitypipe *ip, infinitypipe_notify_fn fn, void *fn_arg)
 {
     assert(ip);

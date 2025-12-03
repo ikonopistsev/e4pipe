@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#include "pipeevent-st.h"
+#include "e4pipe/pipeevent_struct.h"
 
 #define PEV_PENDING_READ  EV_READ
 #define PEV_PENDING_WRITE EV_WRITE
