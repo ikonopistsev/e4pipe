@@ -82,3 +82,51 @@ void infinityseg_free(struct infinityseg* s)
     close(s->p[1]);
     free(s);
 }
+
+ssize_t infinityseg_read(struct infinityseg *s, void *buf, size_t size)
+{
+    assert(s);
+    assert(buf || size == 0);
+
+    if (size == 0 || s->len == 0)
+        return 0;
+
+    // Не читаем больше, чем есть в пайпе
+    size_t want = (size < s->len) ? size : s->len;
+    
+    ssize_t rc = read(s->p[0], buf, want);
+    if (rc > 0)
+    {
+        s->len -= (size_t)rc;
+    }
+    
+    return rc;
+}
+
+ssize_t infinityseg_write(struct infinityseg *s, const void *buf, size_t size)
+{
+    assert(s);
+    assert(buf || size == 0);
+
+    if (size == 0)
+        return 0;
+
+    // Проверяем, есть ли место в пайпе
+    size_t room = s->cap - s->len;
+    if (room == 0)
+    {
+        errno = EAGAIN;
+        return -1;
+    }
+
+    // Не пишем больше, чем есть места
+    size_t want = (size < room) ? size : room;
+    
+    ssize_t rc = write(s->p[1], buf, want);
+    if (rc > 0)
+    {
+        s->len += (size_t)rc;
+    }
+    
+    return rc;
+}

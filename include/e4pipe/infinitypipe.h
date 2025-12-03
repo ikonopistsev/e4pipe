@@ -57,8 +57,11 @@ ssize_t infinitypipe_splice_out(struct infinitypipe *ip, int out_fd, size_t max_
 ssize_t infinitypipe_move(struct infinitypipe *dst, struct infinitypipe *src, size_t max_bytes);
 ssize_t infinitypipe_discard(struct infinitypipe *ip, size_t max_bytes);
 
-ssize_t infinitypipe_tee_since(struct infinitypipe *ip,
-    const struct infinitypipe_mark *m, int pipe_fd);
+ssize_t infinitypipe_tee_pipe(struct infinitypipe *ip,
+    const struct infinitypipe_mark *m, int pipe_fd, size_t max_bytes);
+
+ssize_t infinitypipe_tee(struct infinitypipe *ip, struct infinityseg *seg,
+    const struct infinitypipe_mark *m);
 
 #ifdef __cplusplus
 }

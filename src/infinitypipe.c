@@ -398,41 +398,49 @@ ssize_t infinitypipe_move(struct infinitypipe *dst, struct infinitypipe *src, si
 #endif
 }
 
-ssize_t infinitypipe_tee_since(struct infinitypipe *ip,
-                               const struct infinitypipe_mark *m, int pipe_fd)
+ssize_t infinitypipe_tee_pipe(struct infinitypipe *ip,
+    const struct infinitypipe_mark *m, int pipe_fd, size_t max_bytes)
 {
 #ifndef __linux__
     (void)ip;
     (void)m;
-    (void)out_pipe_w;
+    (void)pipe_fd;
+    (void)max_bytes;
     errno = ENOSYS;
     return -1;
 #else
     assert(ip);
 
-    if (!m)
-    {
+    if (!m) {
         errno = EINVAL;
         return -1;
     }
 
-    struct infinityseg *s = (!m || !m->last_before) ? ip->head : m->last_before->next;
+    struct infinityseg *s =
+        (!m || !m->last_before) ? ip->head : m->last_before->next;
+
     size_t total = 0;
 
-    for (; s; s = s->next)
+    for (; s && total < max_bytes; s = s->next)
     {
         size_t left = s->len;
-        while (left > 0)
+        while (left > 0 && total < max_bytes)
         {
+            size_t remain = max_bytes - total;
+            if (left > remain)
+                left = remain;
+
             ssize_t rc = tee(s->p[0], pipe_fd, left, SPLICE_F_NONBLOCK);
             if (rc > 0)
             {
                 total += (size_t)rc;
-                left -= (size_t)rc;
+                left  -= (size_t)rc;
                 continue;
             }
             if (rc == 0)
                 break;
+            if (errno == EINTR)
+                continue;
             if (errno == EAGAIN || errno == EWOULDBLOCK)
                 return total ? (ssize_t)total : -1;
             return -1;
@@ -440,5 +448,36 @@ ssize_t infinitypipe_tee_since(struct infinitypipe *ip,
     }
 
     return (ssize_t)total;
+#endif
+}
+
+ssize_t infinitypipe_tee(struct infinitypipe *ip,
+    struct infinityseg *seg, const struct infinitypipe_mark *m)
+{
+#ifndef __linux__
+    (void)ip;
+    (void)seg;
+    (void)m;
+    errno = ENOSYS;
+    return -1;
+#else
+    assert(ip);
+
+    if (!seg) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (seg->len >= seg->cap) {
+        errno = EAGAIN;  // сегмент полон
+        return -1;
+    }
+
+    size_t room = seg->cap - seg->len;
+    ssize_t rc = infinitypipe_tee_pipe(ip, m, seg->p[1], room);
+    if (rc > 0) {
+        seg->len += (size_t)rc;
+    }
+    return rc;
 #endif
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <sys/types.h>
 
 #ifndef INFINITYSEG_DEFAULT_CAPACITY
 #define INFINITYSEG_DEFAULT_CAPACITY (256u * 1024u)
@@ -25,6 +26,10 @@ struct infinityseg
 struct infinityseg *infinityseg_new(size_t cap_hint, int flags);
 
 void infinityseg_free(struct infinityseg* s);
+
+ssize_t infinityseg_read(struct infinityseg *s, void *buf, size_t size);
+
+ssize_t infinityseg_write(struct infinityseg *s, const void *buf, size_t size);
 
 #ifdef __cplusplus
 }
