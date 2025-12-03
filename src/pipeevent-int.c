@@ -21,17 +21,6 @@ static inline void pipev_disarm_write_event(struct pipeevent *pev)
     }
 }
 
-void pipev_ip_notify(void *arg)
-{
-    struct pipeevent *pev = (struct pipeevent*)arg;
-    if (!pev->deferred_scheduled) 
-    {
-        pev->deferred_scheduled = 1;
-        struct timeval tv = {0, 0};
-        evtimer_add(&pev->ev_deferred, &tv);
-    }
-}
-
 void pipev_flush_output(struct pipeevent *pev)
 {
     if (!(pev->enabled & EV_WRITE)) 
@@ -135,12 +124,4 @@ void pipev_on_readable(evutil_socket_t fd, short what, void *arg)
     pipeevent_disable(pev, EV_READ|EV_WRITE);
     if (pev->eventcb) 
         pev->eventcb(pev, PEV_EVENT_ERROR, pev->cb_ctx);
-}
-
-void pipev_on_writable(evutil_socket_t fd, short what, void *arg)
-{
-    (void)fd;
-    (void)what;
-    struct pipeevent *pev = (struct pipeevent *)arg;
-    pipev_flush_output(pev);
 }

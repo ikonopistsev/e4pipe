@@ -64,7 +64,7 @@ struct infinityseg *infinityseg_new(size_t cap_hint, int flags)
 
 #ifdef __linux__
     s->cap = try_set_pipe_sz(s->p[0],
-                             cap_hint ? cap_hint : INFINITYSEG_DEFAULT_CAPACITY);
+        cap_hint ? cap_hint : INFINITYSEG_DEFAULT_CAPACITY);
 #else
     (void)cap_hint;
     s->cap = INFINITYSEG_DEFAULT_CAPACITY;
