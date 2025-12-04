@@ -104,7 +104,7 @@ ssize_t infinitypipe_splice_in(struct infinitypipe *ip, int in_fd, size_t max_by
         }        
 
         struct infinityseg *s = ip->tail;
-        int newly_allocated = 0;
+        size_t newly_allocated = 0;
 
         /* Нужен новый сегмент? Создаём, но НЕ прицепляем к списку пока не будет rc>0 */
         if (!s || s->len >= s->cap)

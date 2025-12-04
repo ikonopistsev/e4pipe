@@ -141,7 +141,7 @@ ev_ssize_t infinitypipe_read(struct infinitypipe *ip,
     while ((total < max_bytes) && (avail > 0))
     {
         struct infinityseg *s = ip->tail;
-        int newly_allocated = 0;
+        size_t newly_allocated = 0;
 
         /* Нужен новый сегмент? Создаём, но НЕ прицепляем к списку пока не будет rc>0 */
         if (!s || s->len >= s->cap)

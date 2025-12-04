@@ -35,6 +35,9 @@ static inline void ip_note_change(struct infinitypipe *ip, size_t added, size_t 
     ip->stat.n_added += added;
     ip->stat.n_deleted += deleted;
 
+    if (ip->notify_pending)
+        return;    
+
     /* lightweight notify to parent: schedule deferred tick */
     if (ip->fn) 
     {

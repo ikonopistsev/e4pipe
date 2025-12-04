@@ -14,11 +14,11 @@ struct pipeevent {
 
     struct event ev_read;
     struct event ev_write;
-    int ev_write_added;
+    size_t ev_write_added;
 
     /* deferred dispatcher */
     struct event ev_deferred;
-    int deferred_scheduled;
+    size_t deferred_scheduled;
 
     pipeevent_data_cb  readcb;
     pipeevent_data_cb  writecb;
@@ -29,5 +29,5 @@ struct pipeevent {
     struct infinitypipe out;
 
     unsigned pending_flags;
-    int cb_running;
+    size_t cb_running;
 };
