@@ -9,7 +9,7 @@ struct infinitypipe
     struct infinitypipe_info stat;
     size_t seg_capacity;
     size_t total_len;
-    int flags;
+    size_t flags;
     // maximum allowed size of the pipe
     size_t max_size;
     // callback

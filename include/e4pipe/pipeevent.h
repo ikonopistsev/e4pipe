@@ -28,7 +28,7 @@ enum pipeevent_options
 
 // Создать pipeevent над уже открытым fd (nonblocking будет выставлен внутри)
 struct pipeevent* pipeevent_socket_new(struct event_base *base,
-    int fd, int options);
+    evutil_socket_t fd, size_t options);
 
 // Освободить, при OPT_CLOSE_ON_FREE — закрыть fd
 void pipeevent_free(struct pipeevent *pev);

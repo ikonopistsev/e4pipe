@@ -44,7 +44,7 @@ void infinitypipe_mark(struct infinitypipe *ip, struct infinitypipe_mark *m);
 void infinitypipe_set_max_size(struct infinitypipe *ip, size_t max_size);
 
 // init/free
-int infinitypipe_init(struct infinitypipe *ip, size_t seg_capacity, int flags);
+int infinitypipe_init(struct infinitypipe *ip, size_t seg_capacity, size_t flags);
 void infinitypipe_free(struct infinitypipe *ip);
 
 // callbacks setup

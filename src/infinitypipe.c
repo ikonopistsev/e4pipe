@@ -54,7 +54,7 @@ int infinitypipe_get_stat(struct infinitypipe *ip, struct infinitypipe_info *sta
 
 /* ---- public ---- */
 
-int infinitypipe_init(struct infinitypipe *ip, size_t seg_capacity, int flags)
+int infinitypipe_init(struct infinitypipe *ip, size_t seg_capacity, size_t flags)
 {
     assert(ip);
 

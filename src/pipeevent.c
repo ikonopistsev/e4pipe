@@ -6,7 +6,8 @@
 
 /* public API */
 
-struct pipeevent *pipeevent_socket_new(struct event_base *base, int fd, int options)
+struct pipeevent *pipeevent_socket_new(struct event_base *base, 
+    evutil_socket_t fd, size_t options)
 {
 #ifndef __linux__
     (void)base;

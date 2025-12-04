@@ -7,9 +7,8 @@
 
 struct pipeevent {
     struct event_base *base;
-    int fd;
-    int options;
-
+    evutil_socket_t fd;
+    size_t options;
     short enabled;
 
     struct event ev_read;
