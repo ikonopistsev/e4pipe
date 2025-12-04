@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 
 #include "pipeevent-int.h"
+#include "infinitypipe-int.h"
 #include <assert.h>
 
 /* public API */
@@ -73,6 +74,7 @@ int pipeevent_enable(struct pipeevent *pev, short events)
     {
         if (event_add(&pev->ev_read, NULL) != 0)
             return -1;
+            
         pev->enabled |= EV_READ;
     }
 
@@ -80,7 +82,7 @@ int pipeevent_enable(struct pipeevent *pev, short events)
     {
         pev->enabled |= EV_WRITE;
         /* start flushing if already has data */
-        if (infinitypipe_get_length(&pev->out) > 0)
+        if (!ip_is_empty(&pev->out))
             pipev_ip_notify(pev);
     }
 

@@ -1,10 +1,13 @@
 #define _GNU_SOURCE
 
 #include "pipeevent-int.h"
+#include "infinitypipe-int.h"
 
 static inline void pipev_arm_write_event(struct pipeevent *pev)
 {
-    if (!(pev->enabled & EV_WRITE)) return;
+    if (!(pev->enabled & EV_WRITE)) 
+        return;
+
     if (!pev->ev_write_added) 
     {
         event_add(&pev->ev_write, NULL);
@@ -14,7 +17,7 @@ static inline void pipev_arm_write_event(struct pipeevent *pev)
 
 static inline void pipev_disarm_write_event(struct pipeevent *pev)
 {
-    if (pev->ev_write_added && infinitypipe_get_length(&pev->out) == 0) 
+    if (pev->ev_write_added && ip_is_empty(&pev->out)) 
     {
         event_del(&pev->ev_write);
         pev->ev_write_added = 0;
@@ -27,12 +30,14 @@ void pipev_flush_output(struct pipeevent *pev)
         return;
 
     for (;;) {
-        if (infinitypipe_get_length(&pev->out) == 0) {
+        if (ip_is_empty(&pev->out)) {
             pipev_disarm_write_event(pev);
             return;
         }
 
-        ssize_t rc = infinitypipe_splice_out(&pev->out, pev->fd, INFINITYPIPE_MAX_SPLICE_AT_ONCE);
+        ssize_t rc = infinitypipe_splice_out(&pev->out, 
+            pev->fd, INFINITYPIPE_MAX_SPLICE_AT_ONCE);
+
         if (rc > 0) {
             /* out changed; infinitypipe already scheduled deferred tick */
             continue;
@@ -46,6 +51,7 @@ void pipev_flush_output(struct pipeevent *pev)
         /* error */
         if (pev->eventcb) 
             pev->eventcb(pev, PEV_EVENT_ERROR, pev->cb_ctx);
+            
         return;
     }
 }
@@ -57,7 +63,8 @@ void pipev_run_pending(struct pipeevent *pev)
     
     pev->cb_running = 1;
 
-    while (pev->pending_flags) {
+    while (pev->pending_flags) 
+    {
         unsigned p = pev->pending_flags;
         pev->pending_flags = 0;
 
@@ -65,8 +72,10 @@ void pipev_run_pending(struct pipeevent *pev)
             pev->readcb(pev, pev->cb_ctx);
 
         if (p & PEV_PENDING_WRITE) {
+            
             pipev_flush_output(pev);
-            if (pev->writecb && infinitypipe_get_length(&pev->out) == 0)
+
+            if (pev->writecb && ip_is_empty(&pev->out))
                 pev->writecb(pev, pev->cb_ctx);
         }
     }

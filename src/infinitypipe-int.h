@@ -2,6 +2,11 @@
 
 #include "e4pipe/infinitypipe_struct.h"
 
+static inline size_t ip_is_empty(const struct infinitypipe *ip)
+{
+    return ip->total_len == 0;
+}
+
 static inline void ip_inc_total_len(struct infinitypipe *ip, size_t val)
 {
     if (ip->stat.n_added == 0 && ip->stat.n_deleted == 0)

@@ -112,6 +112,10 @@ ssize_t infinitypipe_splice_in(struct infinitypipe *ip, int in_fd, size_t max_by
             s = infinityseg_new(ip->seg_capacity, ip->flags);
             if (!s)
             {
+                if (errno == EMFILE || errno == ENFILE) {
+                    // буфер забит по ресурсам
+                    errno = EAGAIN;   
+                }
                 if (total)
                     break;
                 return -1;
