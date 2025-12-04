@@ -81,13 +81,13 @@ ev_ssize_t infinitypipe_write(struct infinitypipe *ip,
             continue;
         }
 
-        /* ничего не прочитали — освободим зарезервированное место */
+        // ничего не прочитали — освободим зарезервированное место
         vec[0].iov_len = 0;
         evbuffer_commit_space(out, vec, 1);
 
         if (r == 0)
         {
-            /* EOF по pipe — странно, но считаем, что данных больше нет */
+            // EOF по pipe — странно, но считаем, что данных больше нет
             break;
         }
 
@@ -143,7 +143,7 @@ ev_ssize_t infinitypipe_read(struct infinitypipe *ip,
         struct infinityseg *s = ip->tail;
         size_t newly_allocated = 0;
 
-        /* Нужен новый сегмент? Создаём, но НЕ прицепляем к списку пока не будет rc>0 */
+        // Нужен новый сегмент? Создаём, но НЕ прицепляем к списку пока не будет rc>0
         if (!s || s->len >= s->cap)
         {
             s = infinityseg_new(ip->seg_capacity, ip->flags);
@@ -178,7 +178,7 @@ ev_ssize_t infinitypipe_read(struct infinitypipe *ip,
             continue;
         }
 
-        /* ничего не записали => если сегмент новый, он должен быть убран */
+        // ничего не записали => если сегмент новый, он должен быть убран
         if (newly_allocated)
         {
             infinityseg_free(s);
@@ -186,7 +186,7 @@ ev_ssize_t infinitypipe_read(struct infinitypipe *ip,
 
         if (rc == 0)
         {
-            /* EOF or no data */
+            // EOF or no data
             break;
         }
 
