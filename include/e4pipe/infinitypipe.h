@@ -16,7 +16,7 @@ extern "C" {
 
 // 64 MiB
 #ifndef INFINITYPIPE_MAX_SIZE
-#define INFINITYPIPE_MAX_SIZE (64 * 1024u * 1024u)
+#define INFINITYPIPE_MAX_SIZE (64u * 1024u * 1024u)
 #endif
 
 // структура изменения буфера

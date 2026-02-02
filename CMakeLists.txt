@@ -13,9 +13,6 @@ if (WIN32)
     add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
 endif()
 
-option(E4PIPE__DISABLE_EVENT_SUPPORT
-    "Define if libevent should not be compiled with thread support" OFF)
-
 set(SRC
     src/infinityseg.c
     src/infinitybuf.c

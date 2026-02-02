@@ -37,7 +37,6 @@ void pipev_flush_output(struct pipeevent *pev)
 
         ssize_t rc = infinitypipe_splice_out(&pev->out, 
             pev->fd, INFINITYPIPE_MAX_SPLICE_AT_ONCE);
-
         if (rc > 0) {
             // out changed; infinitypipe already scheduled deferred tick
             continue;
