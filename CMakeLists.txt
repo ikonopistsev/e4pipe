@@ -78,6 +78,7 @@ else()
 endif()
 
 add_library(e4pipe::e4pipe ALIAS e4pipe)
+add_library(E4Pipe::e4pipe ALIAS e4pipe)
 
 set_target_properties(e4pipe PROPERTIES
     POSITION_INDEPENDENT_CODE ON
@@ -93,15 +94,15 @@ target_link_libraries(e4pipe PUBLIC e4pipe_libevent_core)
 
 install(TARGETS e4pipe
     EXPORT e4pipeTargets
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT runtime NAMELINK_COMPONENT dev
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT dev
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT e4pipe_Runtime NAMELINK_COMPONENT e4pipe_Development
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT e4pipe_Development
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT e4pipe_Runtime
     INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
 )
 
 install(FILES ${PUB_HEADER}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/e4pipe"
-    COMPONENT dev
+    COMPONENT e4pipe_Development
 )
 
 write_basic_package_version_file(
@@ -120,19 +121,19 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/e4pipeConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/e4pipeConfigVersion.cmake"
     DESTINATION "${E4PIPE_INSTALL_CMAKEDIR}"
-    COMPONENT dev
+    COMPONENT e4pipe_Development
 )
 
 install(EXPORT e4pipeTargets
     FILE e4pipeTargets.cmake
-    NAMESPACE e4pipe::
+    NAMESPACE E4Pipe::
     DESTINATION "${E4PIPE_INSTALL_CMAKEDIR}"
-    COMPONENT dev
+    COMPONENT e4pipe_Development
 )
 
 export(EXPORT e4pipeTargets
     FILE "${CMAKE_CURRENT_BINARY_DIR}/e4pipeTargets.cmake"
-    NAMESPACE e4pipe::
+    NAMESPACE E4Pipe::
 )
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -147,12 +148,12 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         "Linux helper library with infinitypipe and libevent-backed pipeevent")
 
     if (E4PIPE_LIBRARY_STATIC)
-        set(CPACK_COMPONENTS_ALL dev)
+        set(CPACK_COMPONENTS_ALL e4pipe_Development)
         set(CPACK_DEBIAN_DEV_PACKAGE_NAME "e4pipe-dev")
         set(CPACK_DEBIAN_DEV_PACKAGE_SECTION "libdevel")
         set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "libevent-dev")
     else()
-        set(CPACK_COMPONENTS_ALL runtime;dev)
+        set(CPACK_COMPONENTS_ALL e4pipe_Runtime;e4pipe_Development)
         set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "e4pipe")
         set(CPACK_DEBIAN_RUNTIME_PACKAGE_SECTION "libs")
         set(CPACK_DEBIAN_RUNTIME_PACKAGE_SHLIBDEPS ON)

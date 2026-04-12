@@ -7,6 +7,10 @@ e4pipe is a small Linux‑only helper library that provides:
 
 The goal is to efficiently relay large amounts of data between file descriptors with minimal copying in user space.
 
+The canonical CMake target is `E4Pipe::e4pipe`. The older
+`e4pipe::e4pipe` build-tree alias is kept for compatibility, but new Pulse
+targets should use `E4Pipe::e4pipe`.
+
 ## infinitypipe
 
 `struct infinitypipe` is a linked list of segments (`infinityseg`); each segment owns an internal pipe and tracks how many bytes it currently stores.
